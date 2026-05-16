@@ -1,0 +1,17 @@
+rapid-junk-removal-bc/
+├── .github/workflows/
+│   └── deploy.yml          ← Auto-deploys on every git push
+├── public/
+│   ├── favicon.svg         ← Logo as browser icon
+│   ├── CNAME               ← rapidjunkremoval.ca (for custom domain)
+│   ├── robots.txt          ← SEO
+│   └── sitemap.xml         ← All 10 city URLs for Google
+├── src/
+│   ├── App.jsx             ← The whole React app (your network)
+│   └── main.jsx            ← Boot file
+├── index.html              ← SEO meta, Open Graph, JSON-LD schema
+├── package.json            ← Dependencies (React + Vite)
+├── vite.config.js          ← Build config
+├── .gitignore              ← Standard Node ignores
+├── README.md               ← Full setup docs
+└── DEPLOY.md               ← Quick-start cheat sheet
