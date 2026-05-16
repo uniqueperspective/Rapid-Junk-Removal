@@ -1,0 +1,1027 @@
+import { useState, useEffect } from "react";
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RAPID JUNK REMOVAL — BC NETWORK (with real-job gallery)
+   Brand: Green #6BB22D + Black #0A0A0A
+   Tagline: FAST · RELIABLE · RESPONSIBLE
+   
+   📸 PHOTO SWAP NOTE:
+   Each gallery item has a `src` field. Currently using SVG illustrations 
+   that match the scenes from the 6 reference photos provided. To use real
+   photos: replace `src` values with image URLs (e.g. "/photos/oliver-1.jpg")
+   or base64 data URIs.
+═══════════════════════════════════════════════════════════════════════════ */
+
+const BRAND = {
+  green: "#6BB22D", greenDark: "#4A8A1F", greenGlow: "#8FD653",
+  black: "#0A0A0A", blackSoft: "#161616", blackMid: "#1F1F1F", blackTint: "#2A2A2A",
+  white: "#FFFFFF", gray: "#A8A8A8", grayDark: "#5C5C5C",
+};
+
+/* ─── SVG Illustrations (matching the 6 reference photos) ─────────────────── */
+
+// Photo 1: Garage cleanout (cardboard boxes, household items, mess in garage)
+const GarageCleanoutSVG = () => (
+  <svg viewBox="0 0 400 280" style={{ width:"100%",height:"100%",display:"block" }}>
+    <defs>
+      <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#3A3838" /><stop offset="100%" stopColor="#1A1818" />
+      </linearGradient>
+    </defs>
+    <rect width="400" height="280" fill="url(#g1)" />
+    {/* garage opening */}
+    <rect x="0" y="0" width="120" height="180" fill="#5BAFD9" opacity="0.4" />
+    <rect x="0" y="180" width="120" height="100" fill="#787878" />
+    {/* boxes pile */}
+    <rect x="140" y="180" width="50" height="60" fill="#D4B280" stroke="#8B6F4E" strokeWidth="2" />
+    <rect x="195" y="170" width="55" height="70" fill="#C9A26B" stroke="#8B6F4E" strokeWidth="2" />
+    <rect x="255" y="180" width="60" height="60" fill="#E0BD8B" stroke="#8B6F4E" strokeWidth="2" />
+    <rect x="320" y="190" width="50" height="50" fill="#C9A26B" stroke="#8B6F4E" strokeWidth="2" />
+    {/* small items on top */}
+    <circle cx="220" cy="160" r="12" fill="#8B7355" />
+    <rect x="280" y="160" width="20" height="20" fill="#A03030" />
+    <rect x="160" y="160" width="22" height="22" fill="#2E7B8C" />
+    {/* mattress / tv */}
+    <rect x="320" y="120" width="70" height="65" fill="#E8E8E0" stroke="#888" strokeWidth="1" />
+    <rect x="325" y="125" width="60" height="40" fill="#3A8FB7" opacity="0.7" />
+    {/* tv label */}
+    <text x="355" y="160" fontSize="7" fill="#FFF" textAnchor="middle" fontWeight="700">SAMSUNG</text>
+    {/* bottles */}
+    <rect x="200" y="220" width="6" height="18" fill="#D9A03A" />
+    <rect x="208" y="218" width="6" height="20" fill="#5BA047" />
+    <rect x="216" y="222" width="6" height="16" fill="#3A6FB7" />
+    {/* sticker overlay */}
+    <text x="200" y="40" fontSize="14" fill="#6BB22D" fontWeight="900" textAnchor="middle" opacity="0.85">GARAGE CLEANOUT</text>
+  </svg>
+);
+
+// Photo 2: Backyard cleanup before/after with fence
+const BackyardSVG = () => (
+  <svg viewBox="0 0 400 280" style={{ width:"100%",height:"100%",display:"block" }}>
+    <defs>
+      <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#7CB8E0" /><stop offset="60%" stopColor="#A8DC8A" /><stop offset="100%" stopColor="#6BAA50" />
+      </linearGradient>
+    </defs>
+    <rect width="400" height="280" fill="url(#bg2)" />
+    {/* fence */}
+    <rect x="0" y="100" width="400" height="6" fill="#3A4A2A" />
+    {[...Array(20)].map((_, i) => (
+      <rect key={i} x={i * 20} y="106" width="14" height="80" fill={i % 2 === 0 ? "#4A5A3A" : "#3A4A2A"} />
+    ))}
+    {/* dividing line (before/after) */}
+    <line x1="200" y1="0" x2="200" y2="280" stroke="#FFF" strokeWidth="3" />
+    {/* LEFT: trash pile */}
+    <rect x="20" y="160" width="60" height="40" fill="#D4B280" stroke="#8B6F4E" strokeWidth="1.5" transform="rotate(-8 50 180)" />
+    <rect x="80" y="170" width="50" height="35" fill="#C9A26B" stroke="#8B6F4E" strokeWidth="1.5" transform="rotate(5 105 187)" />
+    <path d="M 30 200 L 50 160 L 70 200 Z" fill="#A8A8A0" />
+    <ellipse cx="100" cy="210" rx="15" ry="8" fill="#2A2A2A" />
+    {/* RIGHT: clean grass */}
+    <rect x="200" y="200" width="200" height="80" fill="#6BAA50" opacity="0.6" />
+    {/* labels */}
+    <rect x="10" y="20" width="80" height="22" rx="3" fill="#0A0A0A" opacity="0.85" />
+    <text x="50" y="35" fontSize="11" fill="#FFF" fontWeight="900" textAnchor="middle">BEFORE</text>
+    <rect x="305" y="20" width="80" height="22" rx="3" fill="#6BB22D" />
+    <text x="345" y="35" fontSize="11" fill="#0A0A0A" fontWeight="900" textAnchor="middle">AFTER</text>
+  </svg>
+);
+
+// Photo 3: Hoarder backyard cleanout (big mess before, clean after)
+const HoarderSVG = () => (
+  <svg viewBox="0 0 400 280" style={{ width:"100%",height:"100%",display:"block" }}>
+    <defs>
+      <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#A8D0E8" /><stop offset="50%" stopColor="#D4B080" /><stop offset="100%" stopColor="#8B7050" />
+      </linearGradient>
+    </defs>
+    <rect width="400" height="280" fill="url(#bg3)" />
+    {/* fence */}
+    <rect x="0" y="80" width="400" height="120" fill="#8B6F4E" opacity="0.6" />
+    {[...Array(15)].map((_, i) => (
+      <rect key={i} x={i * 27} y="80" width="20" height="120" fill={i % 2 === 0 ? "#A08060" : "#8B6F4E"} />
+    ))}
+    {/* shed in middle */}
+    <rect x="170" y="60" width="60" height="60" fill="#3A2A1A" stroke="#1A0A00" strokeWidth="1.5" />
+    <rect x="190" y="80" width="20" height="40" fill="#1A0A00" />
+    {/* MASSIVE pile of junk */}
+    <rect x="30" y="140" width="80" height="50" fill="#C9A26B" transform="rotate(-5 70 165)" />
+    <rect x="100" y="130" width="60" height="60" fill="#D4B280" transform="rotate(8 130 160)" />
+    <ellipse cx="240" cy="180" rx="60" ry="25" fill="#A03030" opacity="0.7" />
+    <ellipse cx="290" cy="170" rx="50" ry="30" fill="#2A4A7B" opacity="0.6" />
+    {/* random items */}
+    <circle cx="60" cy="200" r="8" fill="#2A2A2A" />
+    <rect x="180" y="170" width="22" height="22" fill="#A03030" />
+    <rect x="220" y="195" width="30" height="15" fill="#D9D9D9" />
+    <rect x="300" y="195" width="40" height="20" fill="#5BA047" />
+    <rect x="350" y="160" width="35" height="50" fill="#8B7355" />
+    {/* RV on right */}
+    <rect x="340" y="40" width="60" height="60" fill="#E8E8E8" stroke="#888" strokeWidth="1.5" />
+    <rect x="350" y="55" width="40" height="20" fill="#7BA8C9" />
+    <text x="200" y="40" fontSize="14" fill="#6BB22D" fontWeight="900" textAnchor="middle">FULL PROPERTY CLEANOUT</text>
+  </svg>
+);
+
+// Photo 4: Curbside furniture pile
+const FurnitureSVG = () => (
+  <svg viewBox="0 0 400 280" style={{ width:"100%",height:"100%",display:"block" }}>
+    <defs>
+      <pattern id="brick" patternUnits="userSpaceOnUse" width="40" height="14">
+        <rect width="40" height="14" fill="#8B4A2A" />
+        <rect x="0" y="0" width="20" height="6" fill="#A0573A" />
+        <rect x="20" y="7" width="20" height="6" fill="#A0573A" />
+      </pattern>
+    </defs>
+    {/* brick wall */}
+    <rect x="0" y="0" width="400" height="180" fill="url(#brick)" />
+    {/* windows */}
+    <rect x="60" y="40" width="60" height="80" fill="#3A4A5A" stroke="#1A0A00" strokeWidth="2" />
+    <line x1="90" y1="40" x2="90" y2="120" stroke="#1A0A00" strokeWidth="2" />
+    <line x1="60" y1="80" x2="120" y2="80" stroke="#1A0A00" strokeWidth="2" />
+    <rect x="180" y="40" width="60" height="80" fill="#3A4A5A" stroke="#1A0A00" strokeWidth="2" />
+    <line x1="210" y1="40" x2="210" y2="120" stroke="#1A0A00" strokeWidth="2" />
+    <line x1="180" y1="80" x2="240" y2="80" stroke="#1A0A00" strokeWidth="2" />
+    {/* garage door */}
+    <rect x="320" y="20" width="80" height="160" fill="#1A1A1A" />
+    {/* ground / cobblestones */}
+    <rect x="0" y="180" width="400" height="100" fill="#888" />
+    <circle cx="40" cy="220" r="4" fill="#666" /><circle cx="100" cy="230" r="4" fill="#666" />
+    <circle cx="180" cy="225" r="4" fill="#666" /><circle cx="260" cy="235" r="4" fill="#666" />
+    <circle cx="340" cy="220" r="4" fill="#666" />
+    {/* FURNITURE PILE */}
+    {/* dresser white */}
+    <rect x="160" y="120" width="100" height="60" fill="#F0EBE0" stroke="#888" strokeWidth="1.5" />
+    <circle cx="180" cy="150" r="4" fill="#1A1A1A" /><circle cx="240" cy="150" r="4" fill="#1A1A1A" />
+    {/* cabinet wood */}
+    <rect x="80" y="140" width="80" height="40" fill="#A0784E" stroke="#5A3A1A" strokeWidth="1.5" />
+    {/* ottoman gray */}
+    <rect x="40" y="150" width="50" height="35" fill="#4A4A4A" stroke="#2A2A2A" strokeWidth="1.5" />
+    {/* light fixture white */}
+    <rect x="260" y="100" width="40" height="40" fill="#F8F8F0" stroke="#888" strokeWidth="1.5" />
+    {/* chair */}
+    <rect x="270" y="140" width="30" height="45" fill="#3A3A3A" />
+    <rect x="270" y="135" width="30" height="10" fill="#5A5A5A" />
+    {/* sign post */}
+    <line x1="285" y1="30" x2="285" y2="120" stroke="#2A2A2A" strokeWidth="2" />
+    <polygon points="270,40 300,40 285,55" fill="#A8A8A8" />
+  </svg>
+);
+
+// Photo 5: Garage before/after (cluttered vs organized)
+const GarageOrganizeSVG = () => (
+  <svg viewBox="0 0 400 280" style={{ width:"100%",height:"100%",display:"block" }}>
+    {/* split */}
+    <rect x="0" y="0" width="200" height="280" fill="#3A3A38" />
+    <rect x="200" y="0" width="200" height="280" fill="#1A1A18" />
+    {/* LEFT - cluttered */}
+    <rect x="10" y="50" width="180" height="20" fill="#2A2A2A" />
+    {/* messy shelves */}
+    <rect x="20" y="80" width="170" height="6" fill="#8B6F4E" />
+    <rect x="20" y="130" width="170" height="6" fill="#8B6F4E" />
+    <rect x="20" y="180" width="170" height="6" fill="#8B6F4E" />
+    {/* random items on shelves */}
+    <rect x="30" y="86" width="20" height="40" fill="#A03030" />
+    <rect x="55" y="90" width="25" height="36" fill="#FFD700" />
+    <rect x="85" y="86" width="18" height="40" fill="#5BA047" />
+    <rect x="110" y="88" width="22" height="38" fill="#3A6FB7" />
+    <rect x="140" y="86" width="35" height="40" fill="#A0573A" />
+    <rect x="35" y="138" width="28" height="38" fill="#7B5A3A" />
+    <rect x="70" y="140" width="22" height="36" fill="#A0784E" />
+    <rect x="100" y="138" width="35" height="38" fill="#D4B280" />
+    <rect x="145" y="138" width="30" height="38" fill="#2A2A2A" />
+    {/* mops */}
+    <line x1="40" y1="200" x2="50" y2="270" stroke="#8B6F4E" strokeWidth="3" />
+    <line x1="60" y1="200" x2="55" y2="270" stroke="#3A6FB7" strokeWidth="3" />
+    <line x1="80" y1="200" x2="75" y2="270" stroke="#A03030" strokeWidth="3" />
+    
+    {/* RIGHT - clean */}
+    <rect x="210" y="50" width="180" height="20" fill="#1A1A1A" />
+    {/* organized shelves */}
+    {[0, 1, 2].map(row => (
+      <g key={row}>
+        {[0, 1, 2, 3].map(col => (
+          <rect key={col} x={220 + col * 42} y={80 + row * 50} width="38" height="38" 
+            fill={col % 2 === 0 ? "#1A1A1A" : "#2A2A2A"} stroke="#444" strokeWidth="1" />
+        ))}
+      </g>
+    ))}
+    {/* workbench */}
+    <rect x="220" y="230" width="160" height="8" fill="#8B6F4E" />
+    <rect x="225" y="238" width="6" height="35" fill="#1A1A1A" />
+    <rect x="370" y="238" width="6" height="35" fill="#1A1A1A" />
+    {/* red toolbox */}
+    <rect x="240" y="200" width="40" height="30" fill="#D02020" stroke="#1A0A00" strokeWidth="1" />
+    {/* lights */}
+    <circle cx="280" cy="35" r="4" fill="#FFFFE0" /><circle cx="320" cy="35" r="4" fill="#FFFFE0" />
+    
+    {/* labels */}
+    <rect x="20" y="240" width="80" height="26" rx="13" fill="#0A0A0A" />
+    <text x="60" y="258" fontSize="13" fill="#FFF" fontWeight="900" textAnchor="middle">BEFORE</text>
+    <rect x="290" y="240" width="80" height="26" rx="13" fill="#6BB22D" />
+    <text x="330" y="258" fontSize="13" fill="#0A0A0A" fontWeight="900" textAnchor="middle">AFTER</text>
+  </svg>
+);
+
+// Photo 6: Crew loading truck
+const CrewAtWorkSVG = () => (
+  <svg viewBox="0 0 400 280" style={{ width:"100%",height:"100%",display:"block" }}>
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#A8B8C8" /><stop offset="100%" stopColor="#D8C8B0" />
+      </linearGradient>
+    </defs>
+    <rect width="400" height="180" fill="url(#sky)" />
+    {/* trees / hills */}
+    <ellipse cx="60" cy="100" rx="60" ry="40" fill="#5A7A4A" opacity="0.7" />
+    <ellipse cx="340" cy="110" rx="80" ry="50" fill="#4A6A3A" opacity="0.6" />
+    {/* house */}
+    <rect x="280" y="100" width="120" height="80" fill="#F0EBE0" />
+    <rect x="290" y="120" width="30" height="40" fill="#3A4A5A" />
+    {/* truck */}
+    <rect x="120" y="100" width="100" height="60" fill="#8B6F4E" stroke="#5A3A1A" strokeWidth="2" />
+    {/* furniture on truck */}
+    <rect x="130" y="80" width="20" height="22" fill="#A0573A" />
+    <rect x="155" y="75" width="30" height="27" fill="#7B5A3A" />
+    <rect x="190" y="85" width="25" height="17" fill="#3A2A1A" />
+    {/* truck cab */}
+    <rect x="220" y="115" width="40" height="45" fill="#2A2A2A" />
+    <rect x="225" y="120" width="30" height="20" fill="#7BAFD9" />
+    {/* wheels */}
+    <circle cx="145" cy="170" r="10" fill="#1A1A1A" />
+    <circle cx="195" cy="170" r="10" fill="#1A1A1A" />
+    <circle cx="240" cy="170" r="10" fill="#1A1A1A" />
+    {/* ground */}
+    <rect x="0" y="180" width="400" height="100" fill="#787878" />
+    {/* CREW WORKERS - 3 figures */}
+    {/* worker 1 - carrying dresser */}
+    <ellipse cx="60" cy="210" rx="12" ry="8" fill="#1A1A1A" /> {/* head */}
+    <rect x="50" y="218" width="24" height="35" fill="#3A6FB7" /> {/* shirt blue */}
+    <rect x="50" y="253" width="10" height="22" fill="#7B5A3A" /> {/* pants */}
+    <rect x="64" y="253" width="10" height="22" fill="#7B5A3A" />
+    {/* dresser they're carrying */}
+    <rect x="20" y="200" width="35" height="55" fill="#7B5A3A" stroke="#1A0A00" strokeWidth="1.5" />
+    
+    {/* worker 2 - bagging */}
+    <ellipse cx="180" cy="200" rx="12" ry="8" fill="#1A1A1A" />
+    <rect x="170" y="208" width="24" height="35" fill="#3A6FB7" />
+    <rect x="170" y="243" width="10" height="22" fill="#A0784E" />
+    <rect x="184" y="243" width="10" height="22" fill="#A0784E" />
+    {/* bag */}
+    <path d="M 195 220 L 220 220 L 230 270 L 200 270 Z" fill="#1A1A1A" />
+    
+    {/* worker 3 - holding bag */}
+    <ellipse cx="290" cy="195" rx="12" ry="8" fill="#1A1A1A" />
+    <rect x="280" y="203" width="24" height="35" fill="#3A6FB7" />
+    <rect x="280" y="238" width="10" height="22" fill="#7B5A3A" />
+    <rect x="294" y="238" width="10" height="22" fill="#7B5A3A" />
+    {/* trash bags pile right */}
+    <ellipse cx="340" cy="245" rx="20" ry="18" fill="#1A1A1A" />
+    <ellipse cx="365" cy="250" rx="18" ry="15" fill="#7BA8C9" opacity="0.6" />
+    <ellipse cx="320" cy="265" rx="22" ry="12" fill="#A03030" opacity="0.6" />
+    
+    {/* mattress on ground */}
+    <rect x="80" y="240" width="80" height="35" fill="#F0EBE0" stroke="#888" strokeWidth="1.5" />
+  </svg>
+);
+
+/* ─── Logo Component ──────────────────────────────────────────────────────── */
+function RapidLogo({ size = 60 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display:"block" }}>
+      {/* speed arcs */}
+      <path d="M 15 30 Q 50 12 85 30" stroke={BRAND.green} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <path d="M 18 75 Q 50 88 82 75" stroke={BRAND.green} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      {/* speed lines */}
+      <line x1="5" y1="50" x2="20" y2="50" stroke={BRAND.green} strokeWidth="3" strokeLinecap="round" />
+      <line x1="8" y1="55" x2="22" y2="55" stroke={BRAND.green} strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="10" y1="45" x2="18" y2="45" stroke={BRAND.green} strokeWidth="2" strokeLinecap="round" />
+      {/* truck cab */}
+      <rect x="60" y="40" width="22" height="22" rx="2" fill="#FFF" stroke="#0A0A0A" strokeWidth="1.5" />
+      <rect x="63" y="44" width="14" height="9" fill="#0A0A0A" opacity="0.85" />
+      {/* truck bed */}
+      <rect x="28" y="35" width="35" height="27" rx="1" fill="#0A0A0A" />
+      <text x="45.5" y="53" textAnchor="middle" fontSize="14" fill={BRAND.green} fontWeight="900">♺</text>
+      {/* wheels */}
+      <circle cx="38" cy="65" r="5" fill="#0A0A0A" /><circle cx="38" cy="65" r="2" fill="#FFF" />
+      <circle cx="72" cy="65" r="5" fill="#0A0A0A" /><circle cx="72" cy="65" r="2" fill="#FFF" />
+    </svg>
+  );
+}
+
+/* ─── Photo Components Map ────────────────────────────────────────────────── */
+const PHOTO_COMPONENTS = {
+  garage:    GarageCleanoutSVG,
+  backyard:  BackyardSVG,
+  hoarder:   HoarderSVG,
+  furniture: FurnitureSVG,
+  organize:  GarageOrganizeSVG,
+  crew:      CrewAtWorkSVG,
+};
+
+/* ─── Gallery items (jobs the crews have done) ────────────────────────────── */
+const GALLERY = [
+  { id: 1, type:"garage",    title:"Full Garage Cleanout",    city:"Oliver",     items:"Boxes, household items, electronics", price:"$285", crew:"Okanagan Haul Co.", date:"Mar 2025" },
+  { id: 2, type:"backyard",  title:"Backyard Trash Removal",  city:"Penticton",  items:"Cardboard, wood scraps, debris",      price:"$165", crew:"Skaha Haulers",     date:"Apr 2025" },
+  { id: 3, type:"hoarder",   title:"Hoarder Property Clean",  city:"Kelowna",    items:"Full backyard cleanout, 6 truck loads", price:"$1,840", crew:"Kelowna Klear",     date:"Feb 2025" },
+  { id: 4, type:"furniture", title:"Curbside Furniture Haul", city:"Vernon",     items:"Dresser, cabinet, ottoman, fixtures", price:"$245", crew:"Swan Lake Haulers", date:"Apr 2025" },
+  { id: 5, type:"organize",  title:"Garage Transformation",   city:"Kamloops",   items:"Sort, donate, organize, haul",        price:"$520", crew:"Kamloops Klear",    date:"Mar 2025" },
+  { id: 6, type:"crew",      title:"Estate Cleanout Crew",    city:"Vernon",     items:"Full home estate cleanout, 3-person team", price:"$1,200", crew:"Vernon Valet Haul", date:"Apr 2025" },
+];
+
+/* ─── Network Data ────────────────────────────────────────────────────────── */
+const NETWORK = [
+  { id:"oliver",     city:"Oliver",     region:"South Okanagan", siteName:"Junk Removal Oliver",                       domain:"rapidjunkremoval.ca/oliver",     tagline:"Same-Day Hauling Across the South Okanagan", pattern:1, phone:"250-498-7274", reviews:847,  glyph:"🍇",
+    photoTypes:["garage","backyard","crew"],
+    crews:[ {name:"Okanagan Haul Co.",rating:4.9,price:"$75–120",eta:"20 min",badge:"Same-Day"}, {name:"Valley Junk Pros",rating:4.7,price:"$60–95",eta:"35 min",badge:"Eco"}, {name:"Desert Dump Co.",rating:4.8,price:"$80–130",eta:"45 min",badge:"Licensed"} ]},
+  { id:"penticton",  city:"Penticton",  region:"Okanagan",        siteName:"Penticton Junk Removal Pros",               domain:"rapidjunkremoval.ca/penticton",  tagline:"Fast Pickups Between Skaha & Okanagan Lake", pattern:2, phone:"250-493-7274", reviews:1203, glyph:"🌊",
+    photoTypes:["backyard","furniture","crew"],
+    crews:[ {name:"Skaha Haulers",rating:4.8,price:"$80–125",eta:"25 min",badge:"Top Rated"}, {name:"Twin Lakes Junk",rating:4.6,price:"$65–100",eta:"40 min",badge:"Insured"}, {name:"Peach City Pros",rating:4.9,price:"$90–140",eta:"30 min",badge:"Same-Day"} ]},
+  { id:"kelowna",    city:"Kelowna",    region:"Central Okanagan",siteName:"Fast & Affordable Junk Hauling in Kelowna", domain:"rapidjunkremoval.ca/kelowna",    tagline:"Big-City Service, Local Rates",              pattern:3, phone:"250-762-7274", reviews:3412, glyph:"🏙️",
+    photoTypes:["hoarder","organize","crew"],
+    crews:[ {name:"Kelowna Klear",rating:5.0,price:"$85–145",eta:"20 min",badge:"Premium"}, {name:"Okanagan Dump Co.",rating:4.8,price:"$70–110",eta:"30 min",badge:"Licensed"}, {name:"Knox Mountain Haul",rating:4.7,price:"$75–120",eta:"35 min",badge:"Eco"} ]},
+  { id:"vernon",     city:"Vernon",     region:"North Okanagan",  siteName:"Your Local Vernon Junk Removal Experts",    domain:"rapidjunkremoval.ca/vernon",     tagline:"North Okanagan's Most-Booked Crews",        pattern:4, phone:"250-542-7274", reviews:1876, glyph:"🦅",
+    photoTypes:["furniture","crew","hoarder"],
+    crews:[ {name:"Swan Lake Haulers",rating:4.9,price:"$80–130",eta:"25 min",badge:"Top Rated"}, {name:"BX Ranch Junk Co.",rating:4.7,price:"$70–115",eta:"35 min",badge:"Licensed"}, {name:"Vernon Valet Haul",rating:4.8,price:"$85–135",eta:"30 min",badge:"Premium"} ]},
+  { id:"kamloops",   city:"Kamloops",   region:"Thompson",        siteName:"Trash Out Today — Kamloops",                domain:"rapidjunkremoval.ca/kamloops",   tagline:"Book Before Noon, Hauled Today",            pattern:5, phone:"250-374-7274", reviews:2944, glyph:"🌉",
+    photoTypes:["organize","garage","crew"],
+    crews:[ {name:"Thompson Haul Co.",rating:4.8,price:"$85–140",eta:"20 min",badge:"Same-Day"}, {name:"Kamloops Klear",rating:4.9,price:"$90–150",eta:"25 min",badge:"Premium"}, {name:"Sun Peaks Removal",rating:4.7,price:"$75–120",eta:"35 min",badge:"Licensed"} ]},
+  { id:"osoyoos",    city:"Osoyoos",    region:"South Okanagan",  siteName:"Junk Removal Clean & Clear: Osoyoos",        domain:"rapidjunkremoval.ca/osoyoos",    tagline:"Desert Town, Clean Slate Service",          pattern:6, phone:"250-495-7274", reviews:512,  glyph:"🌵",
+    photoTypes:["garage","backyard"],
+    crews:[ {name:"Sonoran Junk Co.",rating:4.7,price:"$65–100",eta:"30 min",badge:"Budget"}, {name:"Border Haul Pros",rating:4.9,price:"$80–130",eta:"20 min",badge:"Same-Day"} ]},
+  { id:"summerland", city:"Summerland", region:"Okanagan",        siteName:"Junk Services Summerland",                  domain:"rapidjunkremoval.ca/summerland", tagline:"Orchard Country Cleanup Crew",              pattern:7, phone:"250-494-7274", reviews:389,  glyph:"🍑",
+    photoTypes:["backyard","furniture"],
+    crews:[ {name:"Trout Creek Haul",rating:4.8,price:"$70–110",eta:"35 min",badge:"Eco"}, {name:"Summerland Dump",rating:4.6,price:"$60–90",eta:"50 min",badge:"Budget"} ]},
+  { id:"princeton",  city:"Princeton",  region:"Similkameen",     siteName:"Junk Removal Princeton",                    domain:"rapidjunkremoval.ca/princeton",  tagline:"Similkameen Valley Haul Experts",           pattern:1, phone:"250-295-7274", reviews:298,  glyph:"⛰️",
+    photoTypes:["hoarder","crew"],
+    crews:[ {name:"Similkameen Haul",rating:4.7,price:"$70–115",eta:"40 min",badge:"Licensed"}, {name:"Princeton Junk Co.",rating:4.5,price:"$55–85",eta:"55 min",badge:"Budget"} ]},
+  { id:"keremeos",   city:"Keremeos",   region:"Similkameen",     siteName:"Keremeos Junk Removal Pros",                domain:"rapidjunkremoval.ca/keremeos",   tagline:"Cawston–Keremeos Fast Haul",                pattern:2, phone:"250-499-7274", reviews:214,  glyph:"🌾",
+    photoTypes:["backyard","garage"],
+    crews:[ {name:"Similkameen Pros",rating:4.8,price:"$65–100",eta:"30 min",badge:"Same-Day"}, {name:"Keremeos Klear",rating:4.6,price:"$55–85",eta:"45 min",badge:"Eco"} ]},
+  { id:"merritt",    city:"Merritt",    region:"Nicola Valley",   siteName:"Fast & Affordable Junk Hauling in Merritt", domain:"rapidjunkremoval.ca/merritt",    tagline:"Nicola Valley's Reliable Crew",             pattern:3, phone:"250-378-7274", reviews:331,  glyph:"🏔️",
+    photoTypes:["furniture","organize"],
+    crews:[ {name:"Nicola Valley Haul",rating:4.6,price:"$60–100",eta:"45 min",badge:"Insured"}, {name:"Merritt Dump Pros",rating:4.5,price:"$50–80",eta:"60 min",badge:"Budget"} ]},
+];
+
+const PATTERNS = [
+  "Junk Removal [City]","[City] Junk Removal Pros","Fast & Affordable Junk Hauling in [City]",
+  "Your Local [City] Junk Removal Experts","Trash Out Today — [City]","Junk Removal Clean & Clear: [City]","Junk Services [City]",
+];
+
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{font-family:'Inter',sans-serif;background:${BRAND.black};color:${BRAND.white}}
+  ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:${BRAND.black}} ::-webkit-scrollbar-thumb{background:${BRAND.green};border-radius:4px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes lineMove{0%{transform:translateX(-12px);opacity:0}40%{opacity:1}100%{transform:translateX(20px);opacity:0}}
+  .fu{animation:fadeUp .4s ease both}
+  .fi{animation:fadeIn .3s ease both}
+  .ldot{width:8px;height:8px;border-radius:50%;background:${BRAND.green};box-shadow:0 0 8px ${BRAND.green};animation:pulse 2s infinite;display:inline-block;flex-shrink:0}
+  .anton{font-family:'Anton',sans-serif;letter-spacing:1px;text-transform:uppercase}
+  .osw{font-family:'Oswald',sans-serif}
+  input,textarea,select{outline:none;font-family:inherit}
+  .speed-line{position:absolute;height:2px;background:linear-gradient(90deg,transparent,${BRAND.green},transparent);animation:lineMove 1.6s infinite;pointer-events:none}
+  .photo-frame{transition:transform .25s ease, box-shadow .25s ease}
+  .photo-frame:hover{transform:scale(1.02);box-shadow:0 12px 40px rgba(107,178,45,.3)}
+`;
+
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
+function Stars({ r }) {
+  return (
+    <span style={{ color:BRAND.green,fontSize:12,letterSpacing:1 }}>
+      {"★".repeat(Math.floor(r))}{"☆".repeat(5-Math.floor(r))}
+      <span style={{ color:BRAND.gray,marginLeft:4,fontSize:11 }}>{r}</span>
+    </span>
+  );
+}
+
+function SpeedLines({ count=4 }) {
+  return Array.from({length:count}).map((_,i) => (
+    <div key={i} className="speed-line" style={{ top:`${15+i*25}%`,left:`${10+(i%2)*5}%`,width:`${30+i*8}px`,animationDelay:`${i*0.25}s`,opacity:0.5 }} />
+  ));
+}
+
+function PhotoCard({ type, label, height=180, showOverlay=true }) {
+  const Component = PHOTO_COMPONENTS[type] || PHOTO_COMPONENTS.garage;
+  return (
+    <div className="photo-frame" style={{ position:"relative",borderRadius:8,overflow:"hidden",border:`2px solid ${BRAND.blackTint}`,height,cursor:"pointer" }}>
+      <Component />
+      {showOverlay && label && (
+        <div style={{ position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent, rgba(0,0,0,0.92))",padding:"24px 14px 12px" }}>
+          <div className="osw" style={{ fontSize:11,color:BRAND.green,fontWeight:700,letterSpacing:.8,textTransform:"uppercase" }}>{label}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Booking Modal ───────────────────────────────────────────────────────── */
+function BookingModal({ site, onClose }) {
+  const [step, setStep] = useState(1);
+  const [items, setItems] = useState([]);
+  const [date, setDate] = useState("");
+  const [addr, setAddr] = useState("");
+  const [loading, setLoad] = useState(false);
+  const [done, setDone] = useState(false);
+  const ITEMS = ["Furniture","Appliances","Yard Waste","Mattress","Electronics","Construction","Hot Tub / Shed","Full Cleanout"];
+  const toggle = i => setItems(p => p.includes(i) ? p.filter(x=>x!==i) : [...p,i]);
+  const submit = () => { setLoad(true); setTimeout(()=>{ setLoad(false); setDone(true); }, 1500); };
+  const inp = { background:BRAND.black,border:`1.5px solid ${BRAND.blackTint}`,color:BRAND.white,borderRadius:4,padding:"11px 13px",fontSize:13,width:"100%" };
+
+  return (
+    <div onClick={e => e.target===e.currentTarget && onClose()} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,.92)",backdropFilter:"blur(10px)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:16 }}>
+      <div className="fu" style={{ background:BRAND.blackSoft,border:`2px solid ${BRAND.green}`,borderRadius:10,width:"100%",maxWidth:460,overflow:"hidden",boxShadow:`0 30px 90px ${BRAND.green}33` }}>
+        <div style={{ background:`linear-gradient(135deg, ${BRAND.green}, ${BRAND.greenDark})`,padding:"18px 22px",borderBottom:`3px solid ${BRAND.black}`,position:"relative",overflow:"hidden" }}>
+          <SpeedLines count={3} />
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative" }}>
+            <div>
+              <div className="anton" style={{ fontSize:22,color:BRAND.black,lineHeight:1 }}>BOOK PICKUP</div>
+              <div className="osw" style={{ fontSize:11,color:BRAND.black,marginTop:4,letterSpacing:1.5,fontWeight:600 }}>{site.city.toUpperCase()}, BC</div>
+            </div>
+            <button onClick={onClose} style={{ background:BRAND.black,border:"none",color:BRAND.green,width:30,height:30,borderRadius:4,cursor:"pointer",fontSize:14,fontWeight:700 }}>✕</button>
+          </div>
+          <div style={{ display:"flex",gap:6,marginTop:14,position:"relative" }}>
+            {[1,2,3].map(s => <div key={s} style={{ flex:1,height:4,borderRadius:2,background:s<=step?BRAND.black:`${BRAND.black}55`,transition:"background .2s" }} />)}
+          </div>
+        </div>
+        <div style={{ padding:24 }}>
+          {done ? (
+            <div className="fi" style={{ textAlign:"center",padding:"20px 0" }}>
+              <div style={{ fontSize:54,marginBottom:8 }}>♻️</div>
+              <div className="anton" style={{ fontSize:24,color:BRAND.green }}>BOOKED!</div>
+              <div style={{ fontSize:13,color:BRAND.gray,marginTop:10,lineHeight:1.6 }}>
+                Your crew in <span style={{ color:BRAND.white,fontWeight:700 }}>{site.city}</span> will confirm shortly.<br/>
+                Job ID: <span style={{ color:BRAND.green,fontWeight:700 }}>#RJR-{3000+Math.floor(Math.random()*900)}</span>
+              </div>
+              <button onClick={onClose} className="osw" style={{ marginTop:20,padding:"11px 30px",background:BRAND.green,border:"none",borderRadius:4,color:BRAND.black,fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1,textTransform:"uppercase" }}>Done</button>
+            </div>
+          ) : step===1 ? (
+            <>
+              <div className="osw" style={{ fontSize:11,color:BRAND.grayDark,textTransform:"uppercase",letterSpacing:1.5,marginBottom:12,fontWeight:600 }}>What's going?</div>
+              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:7 }}>
+                {ITEMS.map(i => (
+                  <button key={i} onClick={()=>toggle(i)} className="osw" style={{ background:items.includes(i)?BRAND.green:BRAND.black,border:`1.5px solid ${items.includes(i)?BRAND.green:BRAND.blackTint}`,borderRadius:4,padding:"10px 12px",cursor:"pointer",color:items.includes(i)?BRAND.black:BRAND.gray,fontSize:12,fontWeight:600,textAlign:"left",transition:"all .14s",letterSpacing:.3 }}>{i}</button>
+                ))}
+              </div>
+              <button disabled={!items.length} onClick={()=>setStep(2)} className="osw" style={{ marginTop:16,width:"100%",padding:13,background:items.length?BRAND.green:BRAND.blackTint,border:"none",borderRadius:4,color:items.length?BRAND.black:BRAND.grayDark,fontWeight:700,fontSize:14,cursor:items.length?"pointer":"not-allowed",letterSpacing:1.2,textTransform:"uppercase" }}>Next →</button>
+            </>
+          ) : step===2 ? (
+            <>
+              <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
+                <div><div className="osw" style={{ fontSize:11,color:BRAND.grayDark,textTransform:"uppercase",letterSpacing:1.5,marginBottom:6,fontWeight:600 }}>Pickup Date</div>
+                  <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={inp} /></div>
+                <div><div className="osw" style={{ fontSize:11,color:BRAND.grayDark,textTransform:"uppercase",letterSpacing:1.5,marginBottom:6,fontWeight:600 }}>Address</div>
+                  <input type="text" value={addr} onChange={e=>setAddr(e.target.value)} placeholder={`Your address in ${site.city}, BC`} style={inp} /></div>
+              </div>
+              <div style={{ display:"flex",gap:8,marginTop:18 }}>
+                <button onClick={()=>setStep(1)} className="osw" style={{ flex:1,padding:12,background:"transparent",border:`1.5px solid ${BRAND.blackTint}`,borderRadius:4,color:BRAND.gray,fontSize:12,fontWeight:600,cursor:"pointer",letterSpacing:.5,textTransform:"uppercase" }}>← Back</button>
+                <button disabled={!date||!addr} onClick={()=>setStep(3)} className="osw" style={{ flex:2,padding:12,background:(date&&addr)?BRAND.green:BRAND.blackTint,border:"none",borderRadius:4,color:(date&&addr)?BRAND.black:BRAND.grayDark,fontWeight:700,fontSize:14,cursor:(date&&addr)?"pointer":"not-allowed",letterSpacing:1,textTransform:"uppercase" }}>Review →</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ background:BRAND.black,borderRadius:6,padding:"16px 18px",marginBottom:14,border:`1px solid ${BRAND.blackTint}` }}>
+                {[["City",site.city],["Items",items.join(", ")],["Date",date],["Address",addr],["Est. Price",site.crews[0].price]].map(([k,v]) => (
+                  <div key={k} style={{ display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:`1px solid ${BRAND.blackTint}` }}>
+                    <span className="osw" style={{ fontSize:11,color:BRAND.grayDark,textTransform:"uppercase",letterSpacing:1,fontWeight:600 }}>{k}</span>
+                    <span style={{ fontSize:12,color:BRAND.white,maxWidth:"60%",textAlign:"right",fontWeight:500 }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display:"flex",gap:8 }}>
+                <button onClick={()=>setStep(2)} className="osw" style={{ flex:1,padding:12,background:"transparent",border:`1.5px solid ${BRAND.blackTint}`,borderRadius:4,color:BRAND.gray,fontSize:12,fontWeight:600,cursor:"pointer",letterSpacing:.5,textTransform:"uppercase" }}>← Edit</button>
+                <button onClick={submit} className="osw" style={{ flex:2,padding:12,background:BRAND.green,border:"none",borderRadius:4,color:BRAND.black,fontWeight:700,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,letterSpacing:1,textTransform:"uppercase" }}>
+                  {loading ? <span style={{ width:16,height:16,border:`2.5px solid ${BRAND.black}`,borderTopColor:"transparent",borderRadius:"50%",animation:"spin .7s linear infinite",display:"inline-block" }} /> : "Confirm ✓"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── City Site ───────────────────────────────────────────────────────────── */
+function CitySite({ site, onBack, isMain }) {
+  const [tab, setTab] = useState("home");
+  const [booking, setBooking] = useState(false);
+
+  const SectionHead = ({ children }) => (
+    <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:20 }}>
+      <div style={{ width:5,height:32,background:BRAND.green,borderRadius:2 }} />
+      <div className="anton" style={{ fontSize:30,color:BRAND.white,lineHeight:1 }}>{children}</div>
+    </div>
+  );
+
+  // photos for this site
+  const sitePhotos = isMain ? GALLERY : GALLERY.filter(g => site.photoTypes?.includes(g.type));
+
+  return (
+    <div style={{ minHeight:"100vh",background:BRAND.black,color:BRAND.white }}>
+      {booking && <BookingModal site={site} onClose={()=>setBooking(false)} />}
+
+      {/* Nav */}
+      <nav style={{ background:BRAND.black,borderBottom:`3px solid ${BRAND.green}`,position:"sticky",top:0,zIndex:100 }}>
+        <div style={{ maxWidth:980,margin:"0 auto",padding:"0 18px",display:"flex",alignItems:"center",justifyContent:"space-between",minHeight:66,flexWrap:"wrap",gap:8 }}>
+          <div style={{ display:"flex",alignItems:"center",gap:12,padding:"10px 0" }}>
+            {!isMain && <button onClick={onBack} className="osw" style={{ background:BRAND.blackTint,border:"none",color:BRAND.gray,padding:"6px 11px",borderRadius:4,cursor:"pointer",fontSize:11,letterSpacing:.8,textTransform:"uppercase",fontWeight:600 }}>← Network</button>}
+            <RapidLogo size={44} />
+            <div>
+              <div className="anton" style={{ fontSize:18,color:BRAND.white,lineHeight:1 }}>RAPID <span style={{ color:BRAND.green }}>JUNK</span> REMOVAL</div>
+              <div className="osw" style={{ fontSize:9,color:BRAND.grayDark,letterSpacing:2,textTransform:"uppercase",marginTop:3,fontWeight:600 }}>{isMain ? "BC NETWORK · 10 CITIES" : `${site.city.toUpperCase()}, BC`}</div>
+            </div>
+          </div>
+          <div style={{ display:"flex",gap:5,flexWrap:"wrap",padding:"10px 0",alignItems:"center" }}>
+            {["home","gallery","crews","services","about"].map(t => (
+              <button key={t} onClick={()=>setTab(t)} className="osw" style={{ background:tab===t?BRAND.green:"transparent",border:`1.5px solid ${tab===t?BRAND.green:BRAND.blackTint}`,color:tab===t?BRAND.black:BRAND.gray,padding:"7px 13px",borderRadius:4,cursor:"pointer",fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:.8,transition:"all .14s" }}>{t}</button>
+            ))}
+            <a href={`tel:${site.phone}`} className="osw" style={{ background:BRAND.green,color:BRAND.black,padding:"7px 13px",borderRadius:4,fontSize:11,fontWeight:700,letterSpacing:.8,textTransform:"uppercase",textDecoration:"none",marginLeft:6 }}>📞 Call</a>
+          </div>
+        </div>
+      </nav>
+
+      <div style={{ maxWidth:980,margin:"0 auto",padding:"0 18px 60px" }}>
+
+        {/* HOME */}
+        {tab==="home" && (
+          <>
+            {/* HERO with crew photo */}
+            <div className="fu" style={{ marginTop:28,borderRadius:14,overflow:"hidden",position:"relative",border:`1px solid ${BRAND.blackTint}` }}>
+              <div style={{ position:"relative",height:380 }}>
+                <CrewAtWorkSVG />
+                {/* dark overlay */}
+                <div style={{ position:"absolute",inset:0,background:`linear-gradient(180deg, rgba(10,10,10,0.5) 0%, rgba(10,10,10,0.95) 100%)` }} />
+                <SpeedLines count={5} />
+                {/* hero content over photo */}
+                <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center" }}>
+                  <RapidLogo size={70} />
+                  <div className="osw" style={{ fontSize:12,color:BRAND.green,letterSpacing:3,fontWeight:600,marginTop:10,marginBottom:6 }}>
+                    {isMain ? "YOUR LOCAL HOME & PROPERTY EXPERTS" : site.siteName.toUpperCase()}
+                  </div>
+                  <div className="anton" style={{ fontSize:52,color:BRAND.white,lineHeight:.95,marginBottom:8 }}>
+                    {isMain ? <>RAPID <span style={{ color:BRAND.green }}>JUNK</span><br/>REMOVAL</> : <>JUNK REMOVAL<br/><span style={{ color:BRAND.green }}>{site.city.toUpperCase()}</span></>}
+                  </div>
+                  <div style={{ fontSize:14,color:BRAND.gray,marginBottom:18,maxWidth:520 }}>{site.tagline}</div>
+                  <div style={{ display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center" }}>
+                    <button onClick={()=>setBooking(true)} className="osw" style={{ background:BRAND.green,border:"none",color:BRAND.black,fontWeight:700,fontSize:14,padding:"13px 28px",borderRadius:5,cursor:"pointer",letterSpacing:1.2,textTransform:"uppercase",boxShadow:`0 6px 20px ${BRAND.green}66` }}>Book Pickup →</button>
+                    <a href={`tel:${site.phone}`} className="osw" style={{ background:"rgba(10,10,10,0.7)",border:`2px solid ${BRAND.green}`,color:BRAND.green,fontWeight:700,fontSize:14,padding:"11px 22px",borderRadius:5,textDecoration:"none",letterSpacing:.5 }}>📞 {site.phone}</a>
+                  </div>
+                </div>
+              </div>
+              {/* stats bar */}
+              <div style={{ background:BRAND.blackSoft,padding:"18px 24px",display:"flex",gap:30,justifyContent:"center",flexWrap:"wrap",borderTop:`2px solid ${BRAND.green}` }}>
+                {[["⚡","Same-Day"],[`⭐ 4.8+`,"Avg Rating"],[`${site.reviews.toLocaleString()}`,"Reviews"],["♻️","74% Diversion"]].map(([v,l]) => (
+                  <div key={l} style={{ textAlign:"center" }}>
+                    <div className="anton" style={{ fontSize:20,color:BRAND.green }}>{v}</div>
+                    <div className="osw" style={{ fontSize:10,color:BRAND.grayDark,textTransform:"uppercase",letterSpacing:1.2,fontWeight:600 }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Jobs Preview (3 photos) */}
+            <div style={{ marginTop:40 }}>
+              <SectionHead>Recent Jobs in {isMain ? "BC" : site.city}</SectionHead>
+              <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:14 }}>
+                {sitePhotos.slice(0,3).map((job,i) => (
+                  <div key={job.id} className="fu" style={{ animationDelay:`${i*70}ms`,background:BRAND.blackSoft,borderRadius:8,overflow:"hidden",border:`1px solid ${BRAND.blackTint}` }}>
+                    <div style={{ height:160 }}><PhotoCard type={job.type} label="" height={160} showOverlay={false} /></div>
+                    <div style={{ padding:"14px 16px" }}>
+                      <div className="osw" style={{ fontSize:13,fontWeight:700,color:BRAND.white,marginBottom:4 }}>{job.title}</div>
+                      <div style={{ fontSize:11,color:BRAND.gray,lineHeight:1.4 }}>{job.items}</div>
+                      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,paddingTop:8,borderTop:`1px solid ${BRAND.blackTint}` }}>
+                        <span className="osw" style={{ fontSize:10,color:BRAND.grayDark,textTransform:"uppercase",letterSpacing:.5 }}>{job.date}</span>
+                        <span className="anton" style={{ fontSize:15,color:BRAND.green }}>{job.price}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:16,textAlign:"center" }}>
+                <button onClick={()=>setTab("gallery")} className="osw" style={{ background:"transparent",border:`1.5px solid ${BRAND.green}`,color:BRAND.green,padding:"10px 24px",borderRadius:5,cursor:"pointer",fontSize:12,fontWeight:700,letterSpacing:1,textTransform:"uppercase" }}>View Full Gallery →</button>
+              </div>
+            </div>
+
+            {/* Crews */}
+            <div style={{ marginTop:44 }}>
+              <SectionHead>Available Crews</SectionHead>
+              <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+                {site.crews.map((c,i) => (
+                  <div key={c.name} className="fu" style={{ animationDelay:`${i*70}ms`,background:BRAND.blackSoft,border:`1px solid ${BRAND.blackTint}`,borderRadius:7,padding:"18px 22px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10,transition:"all .15s",cursor:"pointer" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor=BRAND.green; e.currentTarget.style.background=BRAND.blackMid; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor=BRAND.blackTint; e.currentTarget.style.background=BRAND.blackSoft; }}>
+                    <div style={{ display:"flex",alignItems:"center",gap:14 }}>
+                      <div style={{ width:42,height:42,borderRadius:6,background:BRAND.green,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0 }}>🚛</div>
+                      <div>
+                        <div className="osw" style={{ fontSize:15,fontWeight:700,color:BRAND.white }}>{c.name}</div>
+                        <div style={{ marginTop:3 }}><Stars r={c.rating} /></div>
+                        <span className="osw" style={{ marginTop:5,display:"inline-block",fontSize:10,background:BRAND.green,color:BRAND.black,borderRadius:3,padding:"2px 8px",fontWeight:700,letterSpacing:.6,textTransform:"uppercase" }}>{c.badge}</span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign:"right" }}>
+                      <div className="anton" style={{ fontSize:20,color:BRAND.white }}>{c.price}</div>
+                      <div className="osw" style={{ fontSize:11,color:BRAND.green,fontWeight:700,marginTop:2 }}>ETA {c.eta}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="fu" style={{ marginTop:36,background:`linear-gradient(90deg, ${BRAND.green}, ${BRAND.greenDark})`,borderRadius:8,padding:"26px 30px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,flexWrap:"wrap",position:"relative",overflow:"hidden" }}>
+              <SpeedLines count={3} />
+              <div style={{ position:"relative" }}>
+                <div className="anton" style={{ fontSize:26,color:BRAND.black,lineHeight:1.1 }}>FREE QUOTE IN 60 SECONDS</div>
+                <div style={{ fontSize:13,color:BRAND.black,marginTop:4,opacity:.85 }}>No hidden fees · Insured crews · {site.city} locals · 74% landfill diversion</div>
+              </div>
+              <button onClick={()=>setBooking(true)} className="osw" style={{ background:BRAND.black,border:"none",color:BRAND.green,fontWeight:700,fontSize:13,padding:"14px 26px",borderRadius:5,cursor:"pointer",whiteSpace:"nowrap",letterSpacing:1.2,textTransform:"uppercase",position:"relative" }}>Get My Quote →</button>
+            </div>
+
+            {/* Trust */}
+            <div style={{ marginTop:44 }}>
+              <SectionHead>Why Rapid?</SectionHead>
+              <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12 }}>
+                {[
+                  {icon:"⚡",title:"FAST",d:"Same-day pickup available across BC. Most jobs hauled within hours."},
+                  {icon:"🛡️",title:"RELIABLE",d:"Licensed, insured BC operators. Transparent quotes. No surprises."},
+                  {icon:"♻️",title:"RESPONSIBLE",d:"Over 74% of what we haul is recycled, donated, or diverted from landfill."},
+                ].map((b,i) => (
+                  <div key={b.title} className="fu" style={{ animationDelay:`${i*80}ms`,background:BRAND.blackSoft,border:`1px solid ${BRAND.blackTint}`,borderRadius:8,padding:"22px 22px",position:"relative",overflow:"hidden" }}>
+                    <div style={{ position:"absolute",top:0,left:0,width:"100%",height:3,background:BRAND.green }} />
+                    <div style={{ fontSize:36,marginBottom:10 }}>{b.icon}</div>
+                    <div className="anton" style={{ fontSize:22,color:BRAND.green,marginBottom:6 }}>{b.title}</div>
+                    <div style={{ fontSize:13,color:BRAND.gray,lineHeight:1.55 }}>{b.d}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* GALLERY TAB - new! */}
+        {tab==="gallery" && (
+          <div className="fu" style={{ marginTop:32 }}>
+            <SectionHead>Job Gallery — {isMain ? "All Cities" : site.city}</SectionHead>
+            <div className="osw" style={{ fontSize:12,color:BRAND.gray,marginBottom:24,letterSpacing:.5 }}>
+              Real jobs. Real before/afters. Real local crews. 📸 ({sitePhotos.length} {sitePhotos.length === 1 ? "photo" : "photos"} shown)
+            </div>
+
+            {/* Featured Before/After */}
+            {(isMain || site.photoTypes?.includes("backyard") || site.photoTypes?.includes("organize")) && (
+              <div className="fu" style={{ background:BRAND.blackSoft,border:`2px solid ${BRAND.green}`,borderRadius:10,overflow:"hidden",marginBottom:24 }}>
+                <div style={{ background:BRAND.green,padding:"10px 18px",display:"flex",alignItems:"center",gap:8 }}>
+                  <span style={{ fontSize:16 }}>🔥</span>
+                  <span className="anton" style={{ fontSize:18,color:BRAND.black }}>FEATURED TRANSFORMATION</span>
+                </div>
+                <div style={{ height:280 }}>
+                  <GarageOrganizeSVG />
+                </div>
+                <div style={{ padding:"18px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10 }}>
+                  <div>
+                    <div className="osw" style={{ fontSize:14,fontWeight:700,color:BRAND.white,marginBottom:3 }}>Complete Garage Transformation</div>
+                    <div style={{ fontSize:11,color:BRAND.gray }}>Sorted · Donated · Hauled · Organized · 1-day completion</div>
+                  </div>
+                  <div className="anton" style={{ fontSize:22,color:BRAND.green }}>$520</div>
+                </div>
+              </div>
+            )}
+
+            {/* Gallery Grid */}
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:14 }}>
+              {sitePhotos.map((job,i) => (
+                <div key={job.id} className="fu" style={{ animationDelay:`${i*60}ms`,background:BRAND.blackSoft,borderRadius:8,overflow:"hidden",border:`1px solid ${BRAND.blackTint}`,transition:"border-color .15s" }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = BRAND.green}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = BRAND.blackTint}
+                >
+                  <div style={{ height:180 }}><PhotoCard type={job.type} label="" height={180} showOverlay={false} /></div>
+                  <div style={{ padding:"14px 16px" }}>
+                    <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6 }}>
+                      <div className="osw" style={{ fontSize:13,fontWeight:700,color:BRAND.white,flex:1 }}>{job.title}</div>
+                      <span className="osw" style={{ fontSize:9,background:BRAND.green,color:BRAND.black,padding:"2px 6px",borderRadius:2,fontWeight:700,letterSpacing:.5,textTransform:"uppercase",marginLeft:8,whiteSpace:"nowrap" }}>{job.city}</span>
+                    </div>
+                    <div style={{ fontSize:11,color:BRAND.gray,lineHeight:1.45,marginBottom:10 }}>{job.items}</div>
+                    <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:10,borderTop:`1px solid ${BRAND.blackTint}` }}>
+                      <div>
+                        <div className="osw" style={{ fontSize:10,color:BRAND.grayDark,textTransform:"uppercase",letterSpacing:.5 }}>{job.crew}</div>
+                        <div style={{ fontSize:10,color:BRAND.grayDark,marginTop:2 }}>{job.date}</div>
+                      </div>
+                      <span className="anton" style={{ fontSize:16,color:BRAND.green }}>{job.price}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div style={{ marginTop:30,padding:"22px 24px",background:BRAND.blackSoft,border:`1px solid ${BRAND.blackTint}`,borderRadius:8,textAlign:"center" }}>
+              <div className="anton" style={{ fontSize:20,color:BRAND.white,marginBottom:6 }}>WANT YOUR JOB ON THIS WALL?</div>
+              <div style={{ fontSize:13,color:BRAND.gray,marginBottom:14 }}>Every booking gets photographed (with your permission) and rated.</div>
+              <button onClick={()=>setBooking(true)} className="osw" style={{ background:BRAND.green,border:"none",color:BRAND.black,fontWeight:700,fontSize:13,padding:"12px 28px",borderRadius:5,cursor:"pointer",letterSpacing:1,textTransform:"uppercase" }}>Book a Pickup →</button>
+            </div>
+          </div>
+        )}
+
+        {/* CREWS */}
+        {tab==="crews" && (
+          <div className="fu" style={{ marginTop:32 }}>
+            <SectionHead>Crews Serving {site.city}</SectionHead>
+            <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
+              {site.crews.map((c,i) => (
+                <div key={c.name} className="fu" style={{ animationDelay:`${i*80}ms`,background:BRAND.blackSoft,border:`1px solid ${BRAND.blackTint}`,borderRadius:8,padding:"24px 24px",borderLeft:`4px solid ${BRAND.green}` }}>
+                  <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:14 }}>
+                    <div style={{ display:"flex",gap:14 }}>
+                      <div style={{ width:52,height:52,borderRadius:6,background:BRAND.green,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0 }}>🚛</div>
+                      <div>
+                        <div className="anton" style={{ fontSize:22,color:BRAND.white }}>{c.name}</div>
+                        <div style={{ marginTop:6 }}><Stars r={c.rating} /></div>
+                        <div style={{ display:"flex",gap:5,flexWrap:"wrap",marginTop:9 }}>
+                          {[c.badge,"INSURED","LOCAL CREW"].map(b => (
+                            <span key={b} className="osw" style={{ fontSize:10,background:b===c.badge?BRAND.green:BRAND.blackTint,color:b===c.badge?BRAND.black:BRAND.gray,border:`1px solid ${b===c.badge?BRAND.green:BRAND.blackTint}`,borderRadius:3,padding:"3px 9px",fontWeight:700,letterSpacing:.5,textTransform:"uppercase" }}>{b}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign:"right" }}>
+                      <div className="anton" style={{ fontSize:24,color:BRAND.white }}>{c.price}</div>
+                      <div className="osw" style={{ fontSize:12,color:BRAND.green,fontWeight:700,marginTop:3 }}>ETA {c.eta}</div>
+                      <button onClick={()=>setBooking(true)} className="osw" style={{ marginTop:12,background:BRAND.green,border:"none",color:BRAND.black,fontWeight:700,fontSize:12,padding:"9px 18px",borderRadius:4,cursor:"pointer",letterSpacing:1,textTransform:"uppercase" }}>Book →</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* SERVICES */}
+        {tab==="services" && (
+          <div className="fu" style={{ marginTop:32 }}>
+            <SectionHead>Services We Offer</SectionHead>
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12 }}>
+              {[
+                {s:"Furniture Removal",d:"Sofas, beds, dressers, dining sets.",i:"🛋️"},
+                {s:"Appliance Haul",d:"Fridges, washers, dryers, stoves.",i:"🧊"},
+                {s:"Yard Waste",d:"Brush, branches, garden cleanups.",i:"🌿"},
+                {s:"Estate Cleanout",d:"Full property cleared, fast.",i:"🏠"},
+                {s:"Construction Debris",d:"Drywall, lumber, reno waste.",i:"🧱"},
+                {s:"Electronics",d:"TVs, computers, e-waste disposal.",i:"📺"},
+                {s:"Mattresses",d:"All sizes hauled and disposed.",i:"🛏️"},
+                {s:"Hot Tubs & Sheds",d:"Heavy dismantling & removal.",i:"🛁"},
+              ].map((item,i) => (
+                <div key={item.s} className="fu" style={{ animationDelay:`${i*45}ms`,background:BRAND.blackSoft,border:`1px solid ${BRAND.blackTint}`,borderRadius:7,padding:"20px 18px",cursor:"pointer",transition:"all .14s" }}
+                  onMouseEnter={e=>{ e.currentTarget.style.borderColor=BRAND.green; e.currentTarget.style.background=BRAND.blackMid; }}
+                  onMouseLeave={e=>{ e.currentTarget.style.borderColor=BRAND.blackTint; e.currentTarget.style.background=BRAND.blackSoft; }}>
+                  <div style={{ fontSize:30,marginBottom:10 }}>{item.i}</div>
+                  <div className="osw" style={{ fontSize:14,fontWeight:700,color:BRAND.white,marginBottom:5,letterSpacing:.3 }}>{item.s}</div>
+                  <div style={{ fontSize:12,color:BRAND.gray,lineHeight:1.5 }}>{item.d}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:30,textAlign:"center" }}>
+              <button onClick={()=>setBooking(true)} className="osw" style={{ background:BRAND.green,border:"none",color:BRAND.black,fontWeight:700,fontSize:14,padding:"15px 38px",borderRadius:5,cursor:"pointer",letterSpacing:1.2,textTransform:"uppercase",boxShadow:`0 4px 16px ${BRAND.green}44` }}>Book Any Service →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ABOUT */}
+        {tab==="about" && (
+          <div className="fu" style={{ marginTop:32 }}>
+            <SectionHead>About {isMain ? "Us" : `Us in ${site.city}`}</SectionHead>
+            <div style={{ background:BRAND.blackSoft,border:`1px solid ${BRAND.blackTint}`,borderRadius:8,padding:"32px 30px",lineHeight:1.7,color:BRAND.gray,fontSize:14 }}>
+              <p style={{ marginBottom:16 }}>
+                <span style={{ color:BRAND.white,fontWeight:600 }}>Rapid Junk Removal</span> is BC's growing network of local hauling crews. We serve <span style={{ color:BRAND.green,fontWeight:600 }}>{isMain ? "10 cities across British Columbia" : site.city}</span> with same-day pickups, transparent pricing, and responsible disposal.
+              </p>
+              <p style={{ marginBottom:16 }}>
+                Every crew in our network is licensed, insured, and trained. We commit to recycling, donating, or diverting <span style={{ color:BRAND.green,fontWeight:600 }}>74% of what we collect</span> — keeping waste out of BC landfills.
+              </p>
+              <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:14,marginTop:26 }}>
+                {[["LICENSED","Fully licensed BC operators"],["INSURED","$2M liability coverage"],["LOCAL","Crews live in your area"],["FAST","Same-day appointments"],["ECO","74% landfill diversion"],["FAIR","No-surprise quotes"]].map(([t,d]) => (
+                  <div key={t} style={{ borderTop:`3px solid ${BRAND.green}`,paddingTop:10 }}>
+                    <div className="anton" style={{ fontSize:18,color:BRAND.white }}>{t}</div>
+                    <div style={{ fontSize:12,color:BRAND.gray,marginTop:3 }}>{d}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginTop:24,textAlign:"center" }}>
+              <a href={`tel:${site.phone}`} className="osw" style={{ background:BRAND.green,border:"none",color:BRAND.black,fontWeight:700,fontSize:14,padding:"15px 36px",borderRadius:5,textDecoration:"none",display:"inline-block",letterSpacing:1.2,textTransform:"uppercase" }}>📞 Call {site.phone}</a>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{ background:BRAND.blackSoft,borderTop:`3px solid ${BRAND.green}`,padding:"28px 18px",textAlign:"center" }}>
+        <RapidLogo size={48} />
+        <div className="anton" style={{ fontSize:18,color:BRAND.white,marginTop:8 }}>RAPID <span style={{ color:BRAND.green }}>JUNK</span> REMOVAL</div>
+        <div className="osw" style={{ fontSize:10,color:BRAND.green,letterSpacing:3,marginTop:6,fontWeight:600 }}>FAST · RELIABLE · RESPONSIBLE</div>
+        <div className="osw" style={{ fontSize:10,color:BRAND.grayDark,marginTop:14,letterSpacing:1.5,textTransform:"uppercase" }}>
+          © 2025 {isMain ? "Rapid Junk Removal" : site.siteName} · Part of the Rapid Junk Removal BC Network
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Network Hub ─────────────────────────────────────────────────────────── */
+function NetworkHub({ onSelect, onMain }) {
+  const [search, setSearch] = useState("");
+  const [hovered, setHovered] = useState(null);
+  const filtered = NETWORK.filter(s => s.city.toLowerCase().includes(search.toLowerCase()) || s.siteName.toLowerCase().includes(search.toLowerCase()) || s.region.toLowerCase().includes(search.toLowerCase()));
+  const totalReviews = NETWORK.reduce((a,s) => a+s.reviews, 0);
+  const totalCrews = NETWORK.reduce((a,s) => a+s.crews.length, 0);
+
+  return (
+    <div style={{ minHeight:"100vh",background:BRAND.black,color:BRAND.white }}>
+      {/* HERO with crew photo background */}
+      <div style={{ position:"relative",overflow:"hidden",borderBottom:`4px solid ${BRAND.green}` }}>
+        <div style={{ position:"absolute",inset:0,zIndex:0 }}>
+          <CrewAtWorkSVG />
+          <div style={{ position:"absolute",inset:0,background:"linear-gradient(180deg, rgba(10,10,10,0.6) 0%, rgba(10,10,10,0.95) 100%)" }} />
+        </div>
+        <SpeedLines count={6} />
+        <div style={{ maxWidth:920,margin:"0 auto",padding:"44px 18px 40px",textAlign:"center",position:"relative",zIndex:1 }}>
+          <div style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:18 }}>
+            <span className="ldot" />
+            <span className="osw" style={{ fontSize:11,color:BRAND.green,letterSpacing:3,textTransform:"uppercase",fontWeight:700 }}>Network Live · 10 BC Cities</span>
+          </div>
+          <RapidLogo size={110} />
+          <div className="anton" style={{ fontSize:72,color:BRAND.white,lineHeight:.9,marginTop:14,marginBottom:8 }}>RAPID <span style={{ color:BRAND.green }}>JUNK</span><br/>REMOVAL</div>
+          <div className="osw" style={{ fontSize:13,color:BRAND.green,letterSpacing:6,marginBottom:10,fontWeight:700 }}>FAST · RELIABLE · RESPONSIBLE</div>
+          <div className="osw" style={{ fontSize:14,color:BRAND.gray,letterSpacing:2,marginBottom:28,textTransform:"uppercase" }}>Your Local Home & Property Experts</div>
+          <button onClick={onMain} className="osw" style={{ background:BRAND.green,border:"none",color:BRAND.black,fontWeight:700,fontSize:14,padding:"14px 32px",borderRadius:5,cursor:"pointer",letterSpacing:1.2,textTransform:"uppercase",marginBottom:36,boxShadow:`0 6px 22px ${BRAND.green}55` }}>Visit Main Site →</button>
+          <div style={{ display:"flex",gap:36,justifyContent:"center",flexWrap:"wrap",marginBottom:32 }}>
+            {[["🚛",totalCrews,"Active Crews"],["🏙️",NETWORK.length,"City Sites"],["⭐",totalReviews.toLocaleString(),"Reviews"],["♻️","74%","Diversion"]].map(([icon,val,lbl]) => (
+              <div key={lbl} style={{ textAlign:"center" }}>
+                <div style={{ fontSize:22 }}>{icon}</div>
+                <div className="anton" style={{ fontSize:28,color:BRAND.green,lineHeight:1.1 }}>{val}</div>
+                <div className="osw" style={{ fontSize:10,color:BRAND.gray,textTransform:"uppercase",letterSpacing:1.5,marginTop:2,fontWeight:600 }}>{lbl}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ maxWidth:420,margin:"0 auto",position:"relative" }}>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search city, region, or site…" className="osw" style={{ width:"100%",background:BRAND.blackSoft,border:`2px solid ${BRAND.blackTint}`,borderRadius:6,padding:"13px 18px 13px 46px",color:BRAND.white,fontSize:13,letterSpacing:.5 }}
+              onFocus={e=>e.target.style.borderColor=BRAND.green} onBlur={e=>e.target.style.borderColor=BRAND.blackTint} />
+            <span style={{ position:"absolute",left:15,top:"50%",transform:"translateY(-50%)",fontSize:16,pointerEvents:"none" }}>🔍</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Jobs Strip - photo gallery preview */}
+      <div style={{ background:BRAND.blackSoft,padding:"28px 18px",borderBottom:`1px solid ${BRAND.blackTint}` }}>
+        <div style={{ maxWidth:980,margin:"0 auto" }}>
+          <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:10 }}>
+              <div style={{ width:4,height:22,background:BRAND.green,borderRadius:2 }} />
+              <div className="anton" style={{ fontSize:22,color:BRAND.white }}>RECENT JOBS NETWORK-WIDE</div>
+            </div>
+            <span className="osw" style={{ fontSize:11,color:BRAND.gray,letterSpacing:1,textTransform:"uppercase" }}>📸 Real BC haul jobs</span>
+          </div>
+          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10 }}>
+            {GALLERY.map((job,i) => (
+              <div key={job.id} className="fu" style={{ animationDelay:`${i*60}ms`,background:BRAND.black,borderRadius:6,overflow:"hidden",border:`1px solid ${BRAND.blackTint}`,cursor:"pointer",transition:"all .15s" }}
+                onMouseEnter={e=>e.currentTarget.style.borderColor=BRAND.green}
+                onMouseLeave={e=>e.currentTarget.style.borderColor=BRAND.blackTint}
+                onClick={() => onSelect(NETWORK.find(n => n.city === job.city) || NETWORK[0])}
+              >
+                <div style={{ height:120,position:"relative" }}>
+                  <PhotoCard type={job.type} label="" height={120} showOverlay={false} />
+                  <div style={{ position:"absolute",top:6,right:6,background:BRAND.green,color:BRAND.black,fontSize:9,padding:"2px 6px",borderRadius:2,fontWeight:900,letterSpacing:.5,textTransform:"uppercase" }} className="osw">{job.city}</div>
+                </div>
+                <div style={{ padding:"9px 12px" }}>
+                  <div className="osw" style={{ fontSize:11,fontWeight:700,color:BRAND.white,lineHeight:1.3 }}>{job.title}</div>
+                  <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:5 }}>
+                    <span className="osw" style={{ fontSize:9,color:BRAND.grayDark,letterSpacing:.4 }}>{job.date}</span>
+                    <span className="anton" style={{ fontSize:13,color:BRAND.green }}>{job.price}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* City Grid */}
+      <div style={{ maxWidth:980,margin:"0 auto",padding:"36px 18px 60px" }}>
+        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:10 }}>
+          <div className="osw" style={{ fontSize:11,color:BRAND.grayDark,letterSpacing:2,textTransform:"uppercase",fontWeight:600 }}>⬇ {filtered.length} {filtered.length===1?"site":"sites"} in network</div>
+          <div className="osw" style={{ fontSize:11,color:BRAND.gray,letterSpacing:.5,textTransform:"uppercase" }}>All sites use the <span style={{ color:BRAND.green,fontWeight:700 }}>rapidjunkremoval.ca</span> domain</div>
+        </div>
+        <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))",gap:14 }}>
+          {filtered.map((site,i) => {
+            const isHov = hovered === site.id;
+            return (
+              <div key={site.id} className="fu"
+                onClick={()=>onSelect(site)}
+                onMouseEnter={()=>setHovered(site.id)}
+                onMouseLeave={()=>setHovered(null)}
+                style={{ animationDelay:`${i*40}ms`,background:isHov?BRAND.blackMid:BRAND.blackSoft,border:`2px solid ${isHov?BRAND.green:BRAND.blackTint}`,borderRadius:10,padding:"22px 22px",cursor:"pointer",transition:"all .18s",boxShadow:isHov?`0 12px 40px ${BRAND.green}38`:"none",transform:isHov?"translateY(-3px)":"none",position:"relative",overflow:"hidden" }}>
+                {isHov && <div style={{ position:"absolute",top:0,left:0,right:0,height:3,background:BRAND.green }} />}
+                <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:14 }}>
+                  <div style={{ display:"flex",alignItems:"center",gap:11 }}>
+                    <div style={{ width:40,height:40,borderRadius:6,background:isHov?BRAND.green:BRAND.blackTint,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,transition:"background .15s" }}>{site.glyph}</div>
+                    <div>
+                      <div className="anton" style={{ fontSize:22,color:BRAND.white,lineHeight:1 }}>{site.city.toUpperCase()}</div>
+                      <div className="osw" style={{ fontSize:10,color:BRAND.grayDark,letterSpacing:1.2,textTransform:"uppercase",marginTop:3,fontWeight:600 }}>{site.region}</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign:"right" }}>
+                    <div className="osw" style={{ fontSize:11,color:BRAND.green,fontWeight:700 }}>{site.crews.length} crews</div>
+                    <div style={{ display:"flex",alignItems:"center",gap:3,marginTop:4,justifyContent:"flex-end" }}>
+                      <span className="ldot" style={{ width:6,height:6 }} />
+                      <span className="osw" style={{ fontSize:9,color:BRAND.green,fontWeight:700,letterSpacing:.5 }}>LIVE</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="osw" style={{ fontSize:12,fontWeight:700,color:BRAND.green,marginBottom:5,letterSpacing:.5,textTransform:"uppercase" }}>PATTERN #{site.pattern}: {site.siteName}</div>
+                <div style={{ fontSize:10,color:BRAND.grayDark,fontFamily:"monospace",marginBottom:13 }}>{site.domain}</div>
+                <div style={{ fontSize:12,color:BRAND.gray,marginBottom:14,lineHeight:1.45 }}>{site.tagline}</div>
+                <div style={{ display:"flex",flexWrap:"wrap",gap:5,marginBottom:14 }}>
+                  {site.crews.map(c => <span key={c.name} className="osw" style={{ fontSize:10,color:BRAND.gray,background:BRAND.black,border:`1px solid ${BRAND.blackTint}`,borderRadius:3,padding:"3px 8px",letterSpacing:.3,fontWeight:500 }}>{c.name}</span>)}
+                </div>
+                <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:12,borderTop:`1px solid ${BRAND.blackTint}` }}>
+                  <div style={{ display:"flex",gap:12 }}>
+                    <span style={{ fontSize:10,color:BRAND.grayDark }}>⭐ 4.7+</span>
+                    <span style={{ fontSize:10,color:BRAND.grayDark }}>{site.reviews.toLocaleString()} reviews</span>
+                  </div>
+                  <span className="osw" style={{ fontSize:11,color:BRAND.green,fontWeight:700,letterSpacing:.8,textTransform:"uppercase" }}>{isHov?"Open Site →":"View →"}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Patterns */}
+        <div className="fu" style={{ marginTop:44,background:BRAND.blackSoft,border:`1px solid ${BRAND.blackTint}`,borderRadius:8,padding:"26px 28px" }}>
+          <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:18 }}>
+            <div style={{ width:4,height:24,background:BRAND.green,borderRadius:2 }} />
+            <div className="anton" style={{ fontSize:22,color:BRAND.white }}>📋 SITE NAMING PATTERNS</div>
+          </div>
+          <div className="osw" style={{ fontSize:12,color:BRAND.gray,marginBottom:14,letterSpacing:.3 }}>From your handwritten brief — each clone site rotates through these 7 patterns:</div>
+          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:8 }}>
+            {PATTERNS.map((p,i) => (
+              <div key={p} style={{ display:"flex",alignItems:"center",gap:12,padding:"9px 12px",background:BRAND.black,borderLeft:`3px solid ${BRAND.green}`,borderRadius:4 }}>
+                <span className="anton" style={{ fontSize:18,color:BRAND.green,minWidth:22 }}>{i+1}</span>
+                <span className="osw" style={{ fontSize:12,color:BRAND.white,letterSpacing:.3,fontWeight:500 }}>{p}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Join CTA */}
+        <div className="fu" style={{ marginTop:28,background:`linear-gradient(135deg, ${BRAND.green}, ${BRAND.greenDark})`,borderRadius:10,padding:"30px 30px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:20,flexWrap:"wrap",position:"relative",overflow:"hidden" }}>
+          <SpeedLines count={4} />
+          <div style={{ position:"relative" }}>
+            <div className="anton" style={{ fontSize:26,color:BRAND.black,marginBottom:6,lineHeight:1.1 }}>RUN A JUNK REMOVAL BUSINESS?</div>
+            <div style={{ fontSize:13,color:BRAND.black,opacity:.85,lineHeight:1.55,maxWidth:460 }}>Join the Rapid Junk Removal BC network. Get matched with local jobs across 10 BC cities, manage bookings, and build your reputation — fast.</div>
+          </div>
+          <button className="osw" style={{ background:BRAND.black,border:"none",color:BRAND.green,fontWeight:700,fontSize:13,padding:"14px 28px",borderRadius:5,cursor:"pointer",whiteSpace:"nowrap",letterSpacing:1.2,textTransform:"uppercase",position:"relative" }}>Apply to Join →</button>
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop:48,textAlign:"center",paddingTop:30,borderTop:`1px solid ${BRAND.blackTint}` }}>
+          <RapidLogo size={56} />
+          <div className="anton" style={{ fontSize:18,color:BRAND.white,marginTop:8,letterSpacing:2 }}>RAPID <span style={{ color:BRAND.green }}>JUNK</span> REMOVAL</div>
+          <div className="osw" style={{ fontSize:10,color:BRAND.green,letterSpacing:4,marginTop:5,fontWeight:600 }}>FAST · RELIABLE · RESPONSIBLE</div>
+          <div className="osw" style={{ fontSize:10,color:BRAND.grayDark,marginTop:16,letterSpacing:1.5,textTransform:"uppercase" }}>Oliver · Penticton · Kelowna · Vernon · Kamloops · Osoyoos · Summerland · Princeton · Keremeos · Merritt</div>
+          <div className="osw" style={{ fontSize:10,color:BRAND.grayDark,marginTop:8,letterSpacing:1 }}>© 2025 Rapid Junk Removal · British Columbia, Canada</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const MAIN_SITE = {
+  id:"main", city:"British Columbia", region:"BC Network",
+  siteName:"Rapid Junk Removal", domain:"rapidjunkremoval.ca",
+  tagline:"Your Local Home & Property Experts. Same-Day Pickup Across 10 BC Cities.",
+  pattern:0, phone:"1-855-RAPID-JR", reviews:11626, glyph:"🚛",
+  photoTypes:["garage","backyard","hoarder","furniture","organize","crew"],
+  crews:[
+    {name:"BC Regional Dispatch",rating:4.9,price:"$60–150",eta:"Same Day",badge:"Network"},
+    {name:"Same-Day Crew Network",rating:4.8,price:"Varies",eta:"20–60 min",badge:"Live"},
+    {name:"Oliver to Kamloops Hub",rating:4.9,price:"$60–150",eta:"Same Day",badge:"10 Cities"},
+  ],
+};
+
+export default function App() {
+  const [activeSite, setActiveSite] = useState(null);
+  const [showMain, setShowMain] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(()=>{ setTimeout(()=>setMounted(true), 80); }, []);
+
+  let screen;
+  if (showMain) screen = <CitySite site={MAIN_SITE} isMain={true} onBack={()=>setShowMain(false)} />;
+  else if (activeSite) screen = <CitySite site={activeSite} onBack={()=>setActiveSite(null)} />;
+  else screen = <NetworkHub onSelect={setActiveSite} onMain={()=>setShowMain(true)} />;
+
+  return (
+    <div style={{ opacity:mounted?1:0,transition:"opacity .5s" }}>
+      <style>{CSS}</style>
+      {screen}
+    </div>
+  );
+}
